@@ -18,9 +18,10 @@ class Collector(object):
         'real': (plop.platform.ITIMER_REAL, signal.SIGALRM),
     }
 
-    def __init__(self, interval=0.01, mode='virtual'):
+    def __init__(self, interval=0.01, mode='virtual', profile_only_main_thread=False):
         self.interval = interval
         self.mode = mode
+        self.profile_only_main_thread = profile_only_main_thread
         assert mode in Collector.MODES
         timer, sig = Collector.MODES[self.mode]
         signal.signal(sig, self.handler)
@@ -62,6 +63,8 @@ class Collector(object):
         for tid, frame in six.iteritems(sys._current_frames()):
             if tid == current_tid:
                 frame = current_frame
+            elif self.profile_only_main_thread:
+                continue
             frames = []
             while frame is not None:
                 code = frame.f_code
